@@ -244,7 +244,7 @@ static struct file_operations cec_dev_fops =
 
 
 /*------------------------------------------------------------------
- * Func : cec_dev_init
+ * Func : cec_dev_module_init
  *
  * Desc : cec dev init function
  *
@@ -252,14 +252,10 @@ static struct file_operations cec_dev_fops =
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-extern int cec_core_init(void);
-int __init cec_dev_init(void)
+int __init cec_dev_module_init(void)
 {        
     int i;
 
-    if (cec_core_init())
-        return -EFAULT;
-    
     if (alloc_chrdev_region(&devno_base, 0, MAX_CEC_CNT, "cec")!=0)    
         return -EFAULT;
 
@@ -277,7 +273,7 @@ int __init cec_dev_init(void)
 
 
 /*------------------------------------------------------------------
- * Func : cec_dev_exit
+ * Func : cec_dev_module_exit
  *
  * Desc : cec dev exit function
  *
@@ -285,8 +281,7 @@ int __init cec_dev_init(void)
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-extern void cec_core_exit(void);
-void cec_dev_exit(void)
+void __exit cec_dev_module_exit(void)
 {   
     int i = 0;            
     
@@ -298,8 +293,6 @@ void cec_dev_exit(void)
     
     devfs_remove("cec");
     unregister_chrdev_region(devno_base, MAX_CEC_CNT);
-
-    cec_core_exit();
 }
 
 

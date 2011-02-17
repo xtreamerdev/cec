@@ -1209,12 +1209,8 @@ static cec_driver mars_cec_driver =
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-extern int cec_dev_init(void);
-static int __init mars_cec_module_init(void)
+int __init mars_cec_module_init(void)
 {                        
-    if (cec_dev_init())
-        return -EFAULT;
-
     cec_info("mars cec module init\n");        
                                 
     if (register_cec_driver(&mars_cec_driver)!=0)
@@ -1236,16 +1232,13 @@ static int __init mars_cec_module_init(void)
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-extern void cec_dev_exit(void);
-static void __exit mars_cec_module_exit(void)
+void __exit mars_cec_module_exit(void)
 {
     unregister_cec_driver(&mars_cec_driver);
-    cec_dev_exit();
 }
 
-
-/* Module information */
+/*
 module_init(mars_cec_module_init);
 module_exit(mars_cec_module_exit);
-/* required to avoid "Unknown symbol" errors on insmod */
 MODULE_LICENSE("GPL");
+*/

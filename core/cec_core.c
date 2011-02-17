@@ -311,7 +311,14 @@ void unregister_cec_driver(cec_driver* driver)
     driver_unregister(&driver->drv);
 }
 
-
+#ifdef CONFIG_CEC_CHARDEV
+extern int cec_dev_module_init(void);
+extern void cec_dev_module_exit(void);
+#endif
+#ifdef CONFIG_MARS_CEC
+extern int mars_cec_module_init(void);
+extern void mars_cec_module_exit(void);
+#endif 
 
 /*------------------------------------------------------------------
  * Func : cec_dev_module_init
@@ -322,11 +329,29 @@ void unregister_cec_driver(cec_driver* driver)
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-int cec_core_init(void)
+static int __init cec_core_init(void)
 {                 
+    int ret;
     printk("%s, register cec_bus %p\n",__FUNCTION__, &cec_bus_type);
 	    
-    return bus_register(&cec_bus_type);     // register cec bus type	        
+    ret = bus_register(&cec_bus_type);     // register cec bus type	        
+    if (ret) return ret;
+#ifdef CONFIG_CEC_CHARDEV
+    ret = cec_dev_module_init();
+    if (ret) {
+	bus_unregister(&cec_bus_type);
+	return ret;
+    }
+#ifdef CONFIG_MARS_CEC
+    ret = mars_cec_module_init();
+    if (ret) {
+	cec_dev_module_exit();
+	bus_unregister(&cec_bus_type);
+	return ret;
+    }
+#endif
+#endif
+   return 0;	// success
 }
 
 
@@ -340,13 +365,25 @@ int cec_core_init(void)
  *         
  * Retn : 0 : success, others fail  
  *------------------------------------------------------------------*/
-void cec_core_exit(void)
-{       
+static void __exit cec_core_exit(void)
+{
+#ifdef CONFIG_CEC_CHARDEV
+#ifdef CONFIG_CEC_MARS
+    mars_cec_module_exit();
+#endif
+    cec_dev_module_exit();
+#endif
     bus_unregister(&cec_bus_type);        // unregister cec bus
 }
+
+module_init(cec_core_init);
+module_exit(cec_core_exit); 
+/* required to avoid "Unknown symbol" errors on insmod */
+MODULE_LICENSE("GPL");
 
 /* Required by the cec_mars module if multiple modules are used for CEC */
 EXPORT_SYMBOL_GPL(register_cec_driver);
 EXPORT_SYMBOL_GPL(unregister_cec_driver);
 EXPORT_SYMBOL_GPL(register_cec_device);
 EXPORT_SYMBOL_GPL(unregister_cec_device);
+
