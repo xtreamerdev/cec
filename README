@@ -1,5 +1,7 @@
                      *** RTD 1283 Linux HDMI-CEC driver ***
 
+Description:
+
 This is a modified version of the 2.6.12 kernel HDMI-CEC driver from Realtek
 for use with cecd and other HDMI-CEC Linux utilities and libraries.
 
@@ -7,3 +9,9 @@ It aims at adding the following enhancements:
 * interruptible read
 * timeouts on R/W operations
 * HDMI-CEC wakeup
+
+
+Getting the source:
+
+* From git:
+  git clone git://github.com/xtreamerdev/cec.git
