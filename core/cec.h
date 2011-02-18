@@ -45,7 +45,7 @@ typedef struct
     int      (*probe)       (cec_device* dev);
     void     (*remove)      (cec_device* dev);
     int      (*xmit)        (cec_device* dev, cm_buff* cmg, unsigned char flags);
-    cm_buff* (*read)        (cec_device* dev, unsigned char flags);
+    cm_buff* (*read)        (cec_device* dev, unsigned char* flags, long timeout);
     int      (*enable)      (cec_device* dev, unsigned char on_off);
     
     int      (*set_logical_addr)(cec_device* dev, unsigned char log_addr);

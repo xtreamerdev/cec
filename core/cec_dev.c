@@ -164,6 +164,7 @@ int cec_dev_ioctl(
     cec_msg  msg;    
     cm_buff* cmb = NULL;    
     int      len;                        		
+    unsigned char flags = 0;           // BLOCK I/O
     
     if (!dev)
         return -ENODEV;
@@ -196,8 +197,8 @@ int cec_dev_ioctl(
         
         if (copy_from_user(&msg, (cec_msg __user *)arg, sizeof(cec_msg)))              
 			return -EFAULT;     
-			
-        cmb = drv->read(dev, 0);       // BLOCK I/O        
+
+        cmb = drv->read(dev, &flags, msg.timeout);    // arg = signed timeout      
 
         if (cmb)
         {
@@ -221,7 +222,7 @@ int cec_dev_ioctl(
             return len;
         }
         
-        return -EFAULT;                    
+        return (flags&TIMEOUT)?-ETIME:-EFAULT;                    
              
     default:    
         cec_warning("cec : unknown ioctl cmd %08x\n", cmd);        

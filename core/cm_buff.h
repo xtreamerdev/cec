@@ -19,6 +19,7 @@ typedef struct {
   
     unsigned char       flags;    
 #define NONBLOCK        0x80    
+#define TIMEOUT         0x40
     struct completion   complete;        
     unsigned char*      head;          
     unsigned char*      data;          

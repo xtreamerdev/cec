@@ -3,10 +3,9 @@
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/module.h>
+#include <linux/seq_file.h>
 #include "cec.h"
 #include "cec_dev.h"
-
-
 
 /*------------------------------------------------------------------
  * Func : cec_bus_match
@@ -311,11 +310,14 @@ void unregister_cec_driver(cec_driver* driver)
     driver_unregister(&driver->drv);
 }
 
-#ifdef CONFIG_CEC_CHARDEV
+#ifdef CONFIG_CEC
+#error WTFFF
+#endif
+#if (defined(CONFIG_CEC_CHARDEV) || defined(WITH_CEC_CHARDEV))
 extern int cec_dev_module_init(void);
 extern void cec_dev_module_exit(void);
 #endif
-#ifdef CONFIG_MARS_CEC
+#if (defined(CONFIG_MARS_CEC) || defined(WITH_MARS_CEC))
 extern int mars_cec_module_init(void);
 extern void mars_cec_module_exit(void);
 #endif 
@@ -336,13 +338,13 @@ static int __init cec_core_init(void)
 	    
     ret = bus_register(&cec_bus_type);     // register cec bus type	        
     if (ret) return ret;
-#ifdef CONFIG_CEC_CHARDEV
+#if (defined(CONFIG_CEC_CHARDEV) || defined(WITH_CEC_CHARDEV))
     ret = cec_dev_module_init();
     if (ret) {
 	bus_unregister(&cec_bus_type);
 	return ret;
     }
-#ifdef CONFIG_MARS_CEC
+#if (defined(CONFIG_MARS_CEC) || defined(WITH_MARS_CEC))
     ret = mars_cec_module_init();
     if (ret) {
 	cec_dev_module_exit();
@@ -367,8 +369,9 @@ static int __init cec_core_init(void)
  *------------------------------------------------------------------*/
 static void __exit cec_core_exit(void)
 {
-#ifdef CONFIG_CEC_CHARDEV
-#ifdef CONFIG_CEC_MARS
+
+#if (defined(CONFIG_CEC_CHARDEV) || defined(WITH_CEC_CHARDEV))
+#if (defined(CONFIG_MARS_CEC) || defined(WITH_MARS_CEC))
     mars_cec_module_exit();
 #endif
     cec_dev_module_exit();

@@ -17,6 +17,7 @@ enum {
 typedef struct {       
     unsigned char*      buf;
     unsigned char       len;    
+    long                timeout;
 }cec_msg;
 
 

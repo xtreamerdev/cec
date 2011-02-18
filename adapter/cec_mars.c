@@ -974,16 +974,33 @@ int mars_cec_xmit_message(mars_cec* p_this, cm_buff* cmb, unsigned char flags)
  *
  * Desc : read message
  *
- * Parm : p_this : handle of cec device
- *        flags  : flag of current read operation
+ * Parm : p_this  : handle of cec device
+ *        flags   : flag of current read operation
+ *        timeout : timeout value in ms (negative = infinite timeout)
  * 
  * Retn : cec message
  *------------------------------------------------------------------*/
-static cm_buff* mars_cec_read_message(mars_cec* p_this, unsigned char flags)
-{                
-    while(!(flags & NONBLOCK) && p_this->status.enable && !cmb_queue_len(&p_this->rx_queue))
-        if (wait_for_completion_interruptible(&p_this->rcv.complete))    // wait message
+static cm_buff* mars_cec_read_message(mars_cec* p_this, unsigned char* flags, long timeout)
+{
+
+    if (!(*flags & NONBLOCK) && p_this->status.enable && !cmb_queue_len(&p_this->rx_queue)) {
+        if (timeout >= 0) {
+            cec_rx_dbg("rx wait for %ld jiffies\n", timeout*HZ/1000);
+            if (!wait_for_completion_interruptible_timeout(&p_this->rcv.complete, timeout*HZ/1000)) {
+                *flags |= TIMEOUT;
+            }
+        } else {
+            wait_for_completion_interruptible(&p_this->rcv.complete);
+        }
+
+        // Reset any readout operation if the message was not completed
+        if (!p_this->rcv.complete.done)
+        {
+            cec_rx_dbg("timeout, interrupt or error - resetting msg rx\n");
+            mars_cec_rx_reset(p_this);
             return NULL;
+        }
+    }
 
     if (p_this->status.enable)
     {
@@ -1159,9 +1176,9 @@ static int ops_xmit(cec_device* dev, cm_buff* cmb, unsigned char flags)
 }
 
 
-static cm_buff* ops_read(cec_device* dev, unsigned char flags)
+static cm_buff* ops_read(cec_device* dev, unsigned char* flags, long timeout)
 {
-    return mars_cec_read_message((mars_cec*) cec_get_drvdata(dev), flags);     
+    return mars_cec_read_message((mars_cec*) cec_get_drvdata(dev), flags, timeout);     
 }
 
 static int ops_suspend(cec_device* dev)
