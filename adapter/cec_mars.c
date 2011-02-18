@@ -993,11 +993,9 @@ static cm_buff* mars_cec_read_message(mars_cec* p_this, unsigned char* flags, lo
             wait_for_completion_interruptible(&p_this->rcv.complete);
         }
 
-        // Reset any readout operation if the message was not completed
-        if (!p_this->rcv.complete.done)
-        {
-            cec_rx_dbg("timeout, interrupt or error - resetting msg rx\n");
-            mars_cec_rx_reset(p_this);
+        // Exit if the message was not completed
+        if (!cmb_queue_len(&p_this->rx_queue)) {
+            cec_rx_dbg("timeout, interrupt or error - bye\n");
             return NULL;
         }
     }
